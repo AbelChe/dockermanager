@@ -13,7 +13,7 @@ from models import *
 
 @bp.before_request
 def check_ticket():
-    if request.remote_addr == '39.155.107.222':
+    if request.remote_addr == '??.??.??.??':
         session['username'] = 'abelche'
         pass
     else:
