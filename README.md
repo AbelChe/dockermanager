@@ -4,5 +4,5 @@
 
 效果图：
 
-![1](D:\Documents\github\dockermanager\1.gif)
+![1](1.gif)
 
