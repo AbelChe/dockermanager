@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='plugin/jquery.terminal/jquery.terminal-2.14.1.min.css') }}">
+</head>
+<body>
+
+</body>
+<script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+<script src="{{ url_for('static', filename='plugin/jquery.terminal/jquery.terminal-2.14.1.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugin/jquery.terminal/prism.js') }}"></script>
+<script src="{{ url_for('static', filename='js/f.js') }}"></script>
+<script>
+    $(function () {
+        $('body').terminal(function (command, term) {
+            if (command != '') {
+                $.ajax({
+                    url: '/api/container/shell?id={{ data.id }}',
+                    data: {
+                        command: command,
+                    },
+                    type: 'POST',
+                    success: function (data) {
+                        if (data.output) {
+                            term.echo(data.output);
+                        }
+                    },
+                    error: function (r, status) {
+                        term.error('[-] Something Error...');
+                    }
+                });
+            }
+        }, {
+            greetings: 'Name: {{ data.name }}\nID: {{ data.id }}\nFrom: {{ data.from_image_name }}',
+            //onBlur: function () {
+            //    return false;
+            //}
+        });
+    });
+</script>
+</html>

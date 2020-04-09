@@ -1,0 +1,121 @@
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+.navbar {
+    /*height: 50px;*/
+    /*transition: all .5s .1s;*/
+    /*display: flex;*/
+    /*flex-flow: row nowrap;*/
+}
+
+.navbar-light .navbar-nav .nav-link:focus, .navbar-light .navbar-nav .nav-link {
+    color: #4f4e5b;
+}
+
+.navbar-light .navbar-nav .nav-link:focus, .navbar-light .navbar-nav .nav-link:hover {
+    color: rgba(104, 143, 168, 0.69);
+}
+
+#user-link a {
+    color: #5e1d51;
+}
+
+#user-link a:hover {
+    color: rgba(97, 65, 88, 0.35);
+}
+
+#logo-top {
+    border-radius: 4px;
+    background-color: #000000;
+}
+
+#logo-top a {
+    font-weight: bolder;
+    font-size: 25px;
+}
+
+#logo-top a span:first-child {
+    color: #ffffff;
+    padding-left: 3px;
+    padding-right: 5px;
+}
+
+#logo-top a span:nth-child(2) {
+    color: #000000;
+    background-color: #f7971e;
+    border-radius: 5px;
+    padding: 0 3px;
+}
+
+#logo-side {
+    background-color: #000000;
+    width: 60%;
+    height: 65px;
+    margin: 0 auto;
+    border-radius: 5px;
+}
+
+#logo-side div {
+    margin: 0 auto;
+}
+
+#logo-side div a {
+    font-weight: bolder;
+    font-size: 40px;
+}
+
+#logo-side div a div {
+    padding-top: 3px;
+}
+
+#logo-side div a div span:first-child {
+    color: #ffffff;
+    padding-right: 5px;
+}
+
+#logo-side div a div span:nth-child(2) {
+    color: #000000;
+    background-color: #f7971e;
+    border-radius: 5px;
+    padding: 0 3px;
+}
+
+/*@media (max-width: 991px) {*/
+/*    #logo-side {*/
+/*        background-color: #000000;*/
+/*        width: 70%;*/
+/*        height: 50px;*/
+/*        margin: 0 auto;*/
+/*        border-radius: 4px;*/
+/*    }*/
+
+/*    #logo-side div {*/
+/*        margin: 0 auto;*/
+/*    }*/
+
+/*    #logo-side div a {*/
+/*        font-weight: bolder;*/
+/*        font-size: 30px;*/
+/*    }*/
+
+/*    #logo-side div a div {*/
+/*        padding-top: 3px;*/
+/*    }*/
+
+/*    #logo-side div a div span:first-child {*/
+/*        color: #ffffff;*/
+/*        padding-right: 5px;*/
+/*    }*/
+
+/*    #logo-side div a div span:nth-child(2) {*/
+/*        color: #000000;*/
+/*        background-color: #f7971e;*/
+/*        border-radius: 4px;*/
+/*        padding: 0 3px;*/
+/*    }*/
+/*}*/

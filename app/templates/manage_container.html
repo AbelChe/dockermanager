@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>设备状态</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugin/datatables/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugin/notiflix/notiflix-2.0.0.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+</head>
+<style>
+    /* NotiflixBlock中图标垂直居中 */
+    #NotiflixBlockWrap-1 > span {
+        line-height: 100%
+    }
+</style>
+<body>
+<div id="wrapper">
+
+    {% include('sidebar.html') %}
+
+    <div id="page-content-wrapper">
+        <div class="container-lg">
+            <div class="row">
+                <div class="col" style="z-index: 10;">
+
+                    <h2 style=" font-size: 25px; font-weight: normal;">
+                        <span style="border-radius: 6px; font-size: 35px; font-weight: 500; margin: 0 1px;">O</span>ne-click
+                        <span style="border-radius: 6px; font-size: 35px; font-weight: 500; margin: 0 1px;">M</span>anagement
+                        <span style="border-radius: 6px; font-size: 35px; font-weight: 500; margin: 0 1px;">D</span>ocker
+                        <span style="background-color: #f7971e; border-radius: 6px; font-size: 35px; font-weight: 500;">Hub</span>
+                    </h2>
+
+                    <hr>
+
+                    <div id="manage-toolbar">
+                        <div>
+                            <a class="btn btn-sm text-primary activate" href="/dmr" style="font-size: 20px;"><i
+                                    class="fa fa-arrow-left"
+                                    aria-hidden="true"></i>
+                                Back to Overview</a>
+                        </div>
+                        <div>
+                            <a id="manage-toolbar-openconsole"
+                               class="btn btn-sm text-primary {% if dk.status != 'running' %}disabled{% endif %}"
+                               href="javascript:void(0);"
+                               {% if dk.status == 'running' %}onclick="openConsole('{{ dk.id }}')"{% endif %}
+                               title="Console Viewer"
+                               style="font-size: 20px;"><i class="fa fa-compress" aria-hidden="true"></i></a>
+                            {% if dk.status == 'running' %}
+                                <a id="manage-toolbar-pausecontainer" class="btn btn-sm text-primary"
+                                   href="javascript:void(0);"
+                                   onclick="pauseContainer('{{ dk.id }}')" title="Pause"><i class="iconfont icon-pause"
+                                                                                            style="font-size: 20px;"></i></a>
+                            {% endif %}
+                            {% if dk.status == 'paused' %}
+                                <a id="manage-toolbar-unpausecontainer" class="btn btn-sm text-primary"
+                                   href="javascript:void(0);"
+                                   onclick="unpauseContainer('{{ dk.id }}')" title="Unpause(to running)"><i
+                                        class="iconfont icon-runfrom" style="font-size: 20px;"></i></a>
+                            {% endif %}
+                            <a id="manage-toolbar-restartcontainer" class="btn btn-sm text-primary"
+                               href="javascript:void(0);"
+                               onclick="restartContainer('{{ dk.id }}')" title="Restart"
+                               style="font-size: 20px;"><i class="fa fa-repeat" aria-hidden="true"></i></a>
+                            {% if dk.status == 'exited' %}
+                                <a id="manage-toolbar-startcontainer" class="btn btn-sm text-primary"
+                                   href="javascript:void(0);"
+                                   onclick="startContainer('{{ dk.id }}')" title="Start"><i
+                                        class="iconfont icon-play" style="font-size: 20px;"></i></a>
+                            {% endif %}
+                            {% if dk.status != 'exited' %}
+                                <a id="manage-toolbar-stopcontainer" class="btn btn-sm text-primary"
+                                   href="javascript:void(0);"
+                                   onclick="stopContainer('{{ dk.id }}')" title="Stop"
+                                   style="font-size: 20px;"><i
+                                        class="fa fa-power-off" aria-hidden="true"></i></a>
+                            {% endif %}
+                            <a id="manage-toolbar-destroycontainer" class="btn btn-sm text-danger"
+                               href="javascript:void(0);"
+                               onclick="destroyContainer('{{ dk.id }}')" title="DESTROY"
+                               style="font-size: 20px;"><i
+                                    class="fa fa-trash" aria-hidden="true"></i></a>
+                        </div>
+                    </div>
+
+                    <div id="manage-chart-block" class="status-overview row row-cols-1  row-cols-lg-2">
+
+                        <div class="overview-unit col">
+                            <div id="cpu-percent-thumbnail" class="manage-thumbnail">
+                                <div class="manage-thumbnail-one-detail">
+                                    <div class="manage-thumbnail-detail-left manage-thumbnail-text-overflow">
+                                        <div class="manage-one-title">
+                                            <span style="font-size: 30px; font-weight: bolder; ">CPU</span>
+                                        </div>
+                                        <span id="cpupercent"
+                                              style="color: #7c5aae; font-size: 25px; font-weight: bolder; ">
+                                                Loading...
+                                            </span>
+                                    </div>
+                                    <div id="cpu-percent-chart" class="manage-thumbnail-detail-right">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overview-unit col">
+                            <div id="ram-percent-thumbnail" class="manage-thumbnail">
+                                <div class="manage-thumbnail-one-detail">
+                                    <div class="manage-thumbnail-detail-left manage-thumbnail-text-overflow">
+                                        <div class="manage-one-title">
+                                            <span style="font-size: 30px; font-weight: bolder; ">RAM</span>
+                                        </div>
+                                        <span id="rampercent"
+                                              style="color: #7c5aae; font-size: 25px; font-weight: bolder; ">
+                                                Loading...
+                                            </span>
+                                    </div>
+                                    <div id="ram-percent-chart" class="manage-thumbnail-detail-right">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div id="manage-detail-block" class="status-overview row row-cols-1  row-cols-lg-3"
+                         style="padding-top: 20px;">
+                        <div class="col manage-detail-block-text">
+                            <p>Name: <span>{{ dk.name }}</span></p>
+                            <p>
+                                <button type="button" class="btn btn-secondary btn-info" data-container="body"
+                                        data-toggle="popover"
+                                        data-placement="bottom" data-content="{{ dk.id }}" style="padding: 0 3px;">
+                                    ID
+                                </button>
+                                <span>{{ dk.id }}</span></p>
+                            <p>Status: <span>{{ dk.status }}</span></p>
+                            <p>CreatedAt: <span>{{ dk.createdat }}</span></p>
+                        </div>
+
+                        <div class="col manage-detail-block-text">
+                            <p>StartedAt: <span>{{ dk.startedat }}</span></p>
+                            <p>FinishedAt: <span>{{ dk.finishedat }}</span></p>
+                            <p>Pid: <span>{{ dk.pid }}</span></p>
+                            <p>Port: <span>{{ dk.port }}</span></p>
+                        </div>
+
+                        <div class="col manage-detail-block-text">
+                            <p>Command: <span><code>{{ dk.command_path }}</code></span> {% if dk.command_args %}
+                                <code
+                                        style="background-color: rgba(195,218,234,0.71); border: 1px solid #8a8a8a; border-radius: 3px; padding: 0 2px;">{{ dk.command_args }}</code>{% endif %}
+                            </p>
+                            <p>Platform: <span>{{ dk.platform }}</span></p>
+                            <p>
+                                <button type="button" class="btn btn-secondary btn-info" data-container="body"
+                                        data-toggle="popover"
+                                        data-placement="bottom" data-content="{{ dk.from_image_name }}"
+                                        style="padding: 0 3px;">
+                                    From Image Name
+                                </button>
+                                <span>{{ dk.from_image_name }}</span>
+                            </p>
+                            <p>
+                                <button type="button" class="btn btn-secondary btn-info" data-container="body"
+                                        data-toggle="popover"
+                                        data-placement="bottom" data-content="{{ dk.from_image_id }}"
+                                        style="padding: 0 3px;">
+                                    From Image ID
+                                </button>
+                                <span>{{ dk.from_image_id }}</span>
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+</body>
+<script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+<script src="{{ url_for('static', filename='plugin/echarts/echarts.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='plugin/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugin/datatables/dataTables.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugin/notiflix/notiflix-2.0.0.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/f.js') }}"></script>
+{#<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>#}
+<script>
+    function openConsole(id) {
+        window.open('/dmr/container/console_viewer?id=' + id, '', 'scrollbars=yes,menubar=no,height=450,width=750,left=0,top=0,screenX=0,screenY=0,resizable=no,toolbar=no,location=no,status=no')
+    }
+
+    function pauseContainer(id) {
+        Notiflix.Block.Init({
+            svgSize: "23px",
+            backgroundColor: "rgb(244,244,244)",
+            svgColor: "#ff9800",
+        });
+        Notiflix.Notify.Init({
+            position: 'right-bottom',
+            clickToClose: true,
+        });
+        Notiflix.Confirm.Init();
+        Notiflix.Confirm.Show(
+            '确定要暂停容器?',
+            '{{ dk.name }}',
+            '确定',
+            '点错了',
+            function () {
+                $('#manage-toolbar-pausecontainer').addClass('disabled');
+                Notiflix.Block.Arrows('#manage-toolbar-pausecontainer');
+                $.ajax({
+                    url: '/api/container/pause?id=' + id,
+                    type: 'GET',
+                    success: function (data) {
+                        Notiflix.Block.Remove('#manage-toolbar-pausecontainer');
+                        Notiflix.Notify.Success('Pause Success!');
+                        setTimeout('location.reload()', 1500);
+                    },
+                    error: function (r, status) {
+                        Notiflix.Block.Remove('#manage-toolbar-pausecontainer');
+                        $('#manage-toolbar-pausecontainer').removeClass('disabled');
+                        Notiflix.Notify.Failure('Something Error...');
+                    }
+                });
+            },
+            function () {
+            }
+        );
+    }
+
+    function unpauseContainer(id) {
+        Notiflix.Block.Init({
+            svgSize: "23px",
+            backgroundColor: "rgb(244,244,244)",
+            svgColor: "#ff9800",
+        });
+        Notiflix.Notify.Init({
+            position: 'right-bottom',
+            clickToClose: true,
+        });
+        Notiflix.Confirm.Init();
+        Notiflix.Confirm.Show(
+            '确定要恢复容器运行状态?',
+            '{{ dk.name }}',
+            '确定',
+            '点错了',
+            function () {
+                $('#manage-toolbar-unpausecontainer').addClass('disabled');
+                Notiflix.Block.Arrows('#manage-toolbar-unpausecontainer');
+                $.ajax({
+                    url: '/api/container/unpause?id=' + id,
+                    type: 'GET',
+                    success: function (data) {
+                        Notiflix.Block.Remove('#manage-toolbar-unpausecontainer');
+                        Notiflix.Notify.Success('Unpause Success!');
+                        setTimeout('location.reload()', 1500);
+                    },
+                    error: function (r, status) {
+                        Notiflix.Block.Remove('#manage-toolbar-unpausecontainer');
+                        $('#manage-toolbar-unpausecontainer').removeClass('disabled');
+                        Notiflix.Notify.Failure('Something Error...');
+                    }
+                });
+            },
+            function () {
+            }
+        );
+    }
+
+    function restartContainer(id) {
+        Notiflix.Block.Init({
+            svgSize: "23px",
+            backgroundColor: "rgb(244,244,244)",
+            svgColor: "#ff9800",
+        });
+        Notiflix.Notify.Init({
+            position: 'right-bottom',
+            clickToClose: true,
+        });
+        Notiflix.Confirm.Init();
+        Notiflix.Confirm.Show(
+            '确定重启?',
+            '{{ dk.name }}',
+            '确定',
+            '点错了',
+            function () {
+                $('#manage-toolbar-restartcontainer').addClass('disabled');
+                Notiflix.Block.Arrows('#manage-toolbar-restartcontainer');
+                $.ajax({
+                    url: '/api/container/restart?id=' + id,
+                    type: 'GET',
+                    success: function (data) {
+                        Notiflix.Block.Remove('#manage-toolbar-restartcontainer');
+                        Notiflix.Notify.Success('Restart Success!');
+                        setTimeout('location.reload()', 1500);
+                    },
+                    error: function (r, status) {
+                        Notiflix.Block.Remove('#manage-toolbar-restartcontainer');
+                        $('manage-toolbar-restartcontainer').removeClass('disabled');
+                        Notiflix.Notify.Failure('Something Error...');
+                    }
+                });
+            },
+            function () {
+            }
+        );
+    }
+
+    function startContainer(id) {
+        Notiflix.Block.Init({
+            svgSize: "23px",
+            backgroundColor: "rgb(244,244,244)",
+            svgColor: "#ff9800",
+        });
+        Notiflix.Notify.Init({
+            position: 'right-bottom',
+            clickToClose: true,
+        });
+        Notiflix.Confirm.Init();
+        Notiflix.Confirm.Show(
+            '确定开启容器?',
+            '{{ dk.name }}',
+            '确定',
+            '点错了',
+            function () {
+                $('#manage-toolbar-startcontainer').addClass('disabled');
+                Notiflix.Block.Arrows('#manage-toolbar-startcontainer');
+                $.ajax({
+                    url: '/api/container/start?id=' + id,
+                    type: 'GET',
+                    success: function (data) {
+                        Notiflix.Block.Remove('#manage-toolbar-startcontainer');
+                        Notiflix.Notify.Success('Start Success!');
+                        setTimeout('location.reload()', 1500);
+                    },
+                    error: function (r, status) {
+                        Notiflix.Block.Remove('#manage-toolbar-startcontainer');
+                        $('#manage-toolbar-startcontainer').removeClass('disabled');
+                        Notiflix.Notify.Failure('Something Error...');
+                    }
+                });
+            },
+            function () {
+            }
+        );
+    }
+
+    function stopContainer(id) {
+        Notiflix.Block.Init({
+            svgSize: "23px",
+            backgroundColor: "rgb(244,244,244)",
+            svgColor: "#ff9800",
+        });
+        Notiflix.Notify.Init({
+            position: 'right-bottom',
+            clickToClose: true,
+        });
+        Notiflix.Confirm.Init();
+        Notiflix.Confirm.Show(
+            '确定要关闭容器?',
+            '{{ dk.name }}',
+            '确定',
+            '点错了',
+            function () {
+                $('#manage-toolbar-stopcontainer').addClass('disabled');
+                Notiflix.Block.Arrows('#manage-toolbar-stopcontainer');
+                $.ajax({
+                    url: '/api/container/stop?id=' + id,
+                    type: 'GET',
+                    success: function (data) {
+                        Notiflix.Block.Remove('#manage-toolbar-stopcontainer');
+                        Notiflix.Notify.Success('Stop Success!');
+                        setTimeout('location.reload()', 1500);
+                    },
+                    error: function (r, status) {
+                        Notiflix.Block.Remove('#manage-toolbar-stopcontainer');
+                        $('#manage-toolbar-stopcontainer').removeClass('disabled');
+                        Notiflix.Notify.Failure('Something Error...');
+                    }
+                });
+            },
+            function () {
+            }
+        );
+    }
+
+    function destroyContainer(id) {
+        Notiflix.Block.Init({
+            svgSize: "23px",
+            backgroundColor: "rgb(244,244,244)",
+            svgColor: "#ff9800",
+        });
+        Notiflix.Notify.Init({
+            position: 'right-bottom',
+            clickToClose: true,
+        });
+        Notiflix.Confirm.Init();
+        Notiflix.Confirm.Show(
+            '确定要销毁容器?',
+            '{{ dk.name }}',
+            '确定',
+            '点错了',
+            function () {
+                $('#manage-toolbar-destroycontainer').addClass('disabled');
+                Notiflix.Block.Arrows('#manage-toolbar-destroycontainer');
+                $.ajax({
+                    url: '/api/container/destroy?id=' + id,
+                    type: 'GET',
+                    success: function (data) {
+                        Notiflix.Block.Remove('#manage-toolbar-destroycontainer');
+                        Notiflix.Notify.Success('DESTROY Success!');
+                        setTimeout('location.reload("/dmr")', 1500);
+                    },
+                    error: function (r, status) {
+                        Notiflix.Block.Remove('#manage-toolbar-destroycontainer');
+                        $('#manage-toolbar-destroycontainer').removeClass('disabled');
+                        Notiflix.Notify.Failure('Something Error...');
+                    }
+                });
+            },
+            function () {
+            }
+        );
+    }
+</script>
+<script>
+    // q  url参数
+    // p  页面
+    // e  元素
+    // h  html
+    // v  变量
+    // C  控制函数
+    // D  渲染函数
+    var cpu_percent_chart = echarts.init(document.getElementById('cpu-percent-chart'), 'light'),
+        ram_percent_chart = echarts.init(document.getElementById('ram-percent-chart'), 'light'),
+        CPUDATA = [],
+        RAMDATA = [],
+        now = new Date(),
+        REFRESH_DATA_FLAG = 5000,
+        NUM_X_AXIS = 100;
+
+    function initChartData(s) {
+        var timeflag = REFRESH_DATA_FLAG * s,
+            n = new Date(+now - timeflag);
+        return {
+            value: [
+                [n.getFullYear(), n.getMonth(), n.getDate()].join('-') + ' ' + [n.getHours(), n.getMinutes(), n.getSeconds()].join(':'),
+                null
+            ]
+        }
+    }
+
+    function makeChartData(data) {
+        var n = new Date();
+        return {
+            value: [
+                [n.getFullYear(), n.getMonth(), n.getDate()].join('-') + ' ' + [n.getHours(), n.getMinutes(), n.getSeconds()].join(':'),
+                data
+            ]
+        }
+    }
+
+    for (var i = NUM_X_AXIS; i > 0; i--) {
+        CPUDATA.push(initChartData(i - 1));
+        RAMDATA.push(initChartData(i - 1));
+    }
+
+    function C_thumbnailData() {
+        D_thumbnailData();
+        setInterval('D_thumbnailData()', REFRESH_DATA_FLAG);
+    }
+
+    function C_thumbnailChart() {
+        D_initChart();
+        setInterval('D_refreshChart()', 2000);
+    }
+
+    function D_thumbnailData() {
+        $.get('/api/container?id=' + GetQueryValue('id'), function (data) {
+            var e_cpupercent = $('#cpupercent'),
+                e_rampercent = $('#rampercent'),
+                v_cpupercent = data.cpu_percent.replace('%', ''),
+                v_rampercent = data.ram_percent.replace('%', '');
+            if (CPUDATA.length >= NUM_X_AXIS) {
+                CPUDATA.shift();  // Delate the first
+            }
+            if (RAMDATA.length >= NUM_X_AXIS) {
+                RAMDATA.shift();
+            }
+            var now = getNowDate();
+            CPUDATA.push(makeChartData(v_cpupercent));
+            RAMDATA.push(makeChartData(v_rampercent));
+            e_cpupercent.html(v_cpupercent + '%');
+            e_rampercent.html(v_rampercent + '%');
+        });
+    }
+
+    function D_initChart() {
+        var cpu_option = {
+                xAxis: {
+                    show: false,
+                    type: 'time',
+                    splitLine: {
+                        show: false
+                    },
+                },
+                yAxis: {
+                    show: false,
+                    type: 'value',
+                    boundaryGap: [0, '100%'],
+                    splitLine: {
+                        show: false
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                grid: [
+                    {
+                        bottom: '20%',
+                        top: '20%',
+                        left: '0%',
+                        right: '0%'
+                    }
+                ],
+                series: [{
+                    data: CPUDATA,
+                    type: 'line',
+                    showSymbol: false,
+                    hoverAnimation: false,
+                    connectNulls: true, // x轴为最小单位为秒， 可能会出现断点，该值设置为 true 会连接断点
+                    areaStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 1,
+                            y: 0,
+                            x2: 0,
+                            y2: 0,
+                            colorStops: [{
+                                offset: 0, color: '#39a2d9'   // 0处偏移的颜色
+                            }, {
+                                offset: 1, color: '#ffffff00'
+                            }],
+                            global: false // 缺省为 false
+                        }
+                    },
+                }]
+            },
+            ram_option = {
+                xAxis: {
+                    show: false,
+                    type: 'time',
+                    splitLine: {
+                        show: false
+                    },
+                },
+                yAxis: {
+                    show: false,
+                    type: 'value',
+                    boundaryGap: [0, '100%'],
+                    splitLine: {
+                        show: false
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                grid: [
+                    {
+                        bottom: '20%',
+                        top: '20%',
+                        left: '0%',
+                        right: '0%'
+                    }
+                ],
+                series: [{
+                    data: RAMDATA,
+                    type: 'line',
+                    showSymbol: false,
+                    hoverAnimation: false,
+                    connectNulls: true, // x轴为最小单位为秒， 可能会出现断点，该值设置为 true 会连接断点
+                    areaStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 1,
+                            y: 0,
+                            x2: 0,
+                            y2: 0,
+                            colorStops: [{
+                                offset: 0, color: '#39a2d9'   // 0处偏移的颜色
+                            }, {
+                                offset: 1, color: '#ffffff00'
+                            }],
+                            global: false // 缺省为 false
+                        }
+                    },
+                }]
+            };
+        cpu_percent_chart.setOption(cpu_option);
+        ram_percent_chart.setOption(ram_option);
+    }
+
+    function D_refreshChart() {
+        var cpu_option = {
+                series: [{
+                    data: CPUDATA
+                }]
+            },
+            ram_option = {
+                series: [{
+                    data: RAMDATA
+                }]
+            };
+        cpu_percent_chart.setOption(cpu_option);
+        ram_percent_chart.setOption(ram_option);
+    }
+
+</script>
+<script>
+    // q  url参数
+    // p  页面
+    // e  元素
+    // h  html
+    // v  变量
+    // C  控制函数
+    // D  渲染函数
+    C_thumbnailData();
+    C_thumbnailChart();
+</script>
+
+
+</html>

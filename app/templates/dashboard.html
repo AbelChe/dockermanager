@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>设备状态</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugin/datatables/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+</head>
+<body>
+<div id="wrapper">
+
+    {% include('sidebar.html') %}
+
+    <div id="page-content-wrapper">
+        <div class="container-lg">
+            <div class="row">
+                <div class="col">
+                    <h2 style=" font-size: 25px; font-weight: normal;">
+                        <span style="border-radius: 6px; font-size: 35px; font-weight: 500; margin: 0 1px;">O</span>ne-click
+                        <span style="border-radius: 6px; font-size: 35px; font-weight: 500; margin: 0 1px;">M</span>anagement
+                        <span style="border-radius: 6px; font-size: 35px; font-weight: 500; margin: 0 1px;">D</span>ocker
+                        <span style="background-color: #f7971e; border-radius: 6px; font-size: 35px; font-weight: 500;">Hub</span>
+                    </h2>
+                    <hr>
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <span>设备状态</span>
+                        </div>
+                        <div style="padding: 10px;">
+                            <div id="cpustatus" style="padding-bottom: 20px; border-bottom: 2px solid slateblue;">
+                                <div class="status-head">
+                                    <h3>CPU状态</h3>
+                                </div>
+                                <div id="cpucount">CPU核心数:
+                                    <span id="cpu-count-physical" style="color: #EF3B3A; font-weight: bold;"></span>
+                                    (物理)
+                                    <span id="cpu-count-logical" style="color: #EF3B3A; font-weight: bold;"></span>
+                                    (逻辑)
+                                </div>
+                                CPU使用率:<span id="cpu-percent" style="color: #EF3B3A; font-weight: bold;"></span>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" aria-valuenow="40"
+                                         aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="ramstatus"
+                                 style="padding-top: 20px; padding-bottom: 20px; border-bottom: 2px solid slateblue;">
+                                <div class="status-head">
+                                    <h3>RAM状态</h3>
+                                </div>
+                                <div id="ram-size">
+                                    已安装:<span id="ram-total" style="color: #EF3B3A; font-weight: bold;"></span>
+                                    已使用:<span id="ram-used" style="color: #EF3B3A; font-weight: bold;"></span>
+                                    空余:<span id="ram-free" style="color: #EF3B3A; font-weight: bold;"></span>
+                                </div>
+                                RAM使用率:<span id="ram-percent" style="color: #EF3B3A; font-weight: bold;"></span>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" aria-valuenow="40"
+                                         aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="diskstatus">
+                                <div class="status-head" style="padding-top: 20px;">
+                                    <h3>磁盘状态</h3>
+                                </div>
+                                <div id="disk-all">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+<script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+{#<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>#}
+<script>
+    function clear_bar_class(e, c) {
+        if (e.hasClass(c)) {
+            e.removeClass(c);
+        }
+        if (e.hasClass(c)) {
+            e.removeClass(c);
+        }
+        if (e.hasClass(c)) {
+            e.removeClass(c);
+        }
+        if (e.hasClass(c)) {
+            e.removeClass(c);
+        }
+    }
+
+    function add_bar_class(e, c) {
+        if (c <= 25 && c >= 0) {
+            e.addClass("bg-success");
+        } else if (c <= 50 && c > 25) {
+            e.addClass("bg-info");
+        } else if (c <= 80 && c > 50) {
+            e.addClass("bg-warning");
+        } else {
+            e.addClass("bg-danger");
+        }
+    }
+
+    // 刷新数据
+    function refresh_data() {
+        $.get("/api/equipment-status", function (data) {
+            var e_cpu_percent_text = $('#cpu-percent'),
+                e_cpu_percent_bar = $('#cpustatus .progress div'),
+                e_cpu_count_physical = $('#cpu-count-physical'),
+                e_cpu_count_logical = $('#cpu-count-logical'),
+                e_ram_total = $('#ram-total'),
+                e_ram_used = $('#ram-used'),
+                e_ram_free = $('#ram-free'),
+                e_ram_percent_text = $('#ram-percent'),
+                e_ram_percent_bar = $('#ramstatus .progress div'),
+                e_disk = $('#disk-all');
+
+            // CPU
+            e_cpu_count_physical.html(data.cpu_count_physical);
+            e_cpu_count_logical.html(data.cpu_count_logical);
+            e_cpu_percent_text.html(data.cpu_percent + '%');
+            clear_bar_class(e_cpu_percent_bar, "progress-bar-success");
+            clear_bar_class(e_cpu_percent_bar, "progress-bar-info");
+            clear_bar_class(e_cpu_percent_bar, "progress-bar-warning");
+            clear_bar_class(e_cpu_percent_bar, "progress-bar-danger");
+            add_bar_class(e_cpu_percent_bar, data.cpu_percent);
+            e_cpu_percent_bar.css('width', data.cpu_percent + '%');
+
+            // RAM
+            e_ram_total.html(Math.ceil(data.ram_total / 1024 / 1042) + ' MB');
+            e_ram_used.html(Math.ceil(data.ram_used / 1024 / 1042) + ' MB');
+            e_ram_free.html(Math.ceil(data.ram_free / 1024 / 1042) + ' MB');
+            e_ram_percent_text.html(data.ram_percent + '%');
+            clear_bar_class(e_ram_percent_bar, "progress-bar-success");
+            clear_bar_class(e_ram_percent_bar, "progress-bar-info");
+            clear_bar_class(e_ram_percent_bar, "progress-bar-warning");
+            clear_bar_class(e_ram_percent_bar, "progress-bar-danger");
+            add_bar_class(e_ram_percent_bar, data.ram_percent);
+            e_ram_percent_bar.css('width', data.ram_percent + '%');
+
+            // DISK
+            e_disk.empty()
+            for (var i = 0; i < data.disk.length; i++) {
+                var d = data.disk[i],
+                    idname = 'disk-' + i;
+                h_new_disk = '<div id="' + idname + '">' +
+                    '<div id="disk-size">' +
+                    '设备:<span class="disk-total" style="color: #EF3B3A; font-weight: bold;"></span>' +
+                    '类型:<span class="dis-fstype" style="color: #EF3B3A; font-weight: bold;"></span>' +
+                    '挂载点:<span class="disk-mountpoint" style="color: #EF3B3A; font-weight: bold;"></span>' +
+                    '总空间:<span class="disk-volume" style="color: #EF3B3A; font-weight: bold;"></span>' +
+                    '已使用:<span class="disk-used" style="color: #EF3B3A; font-weight: bold;"></span>' +
+                    '空余:<span class="disk-free" style="color: #EF3B3A; font-weight: bold;"></span>' +
+                    '</div>' +
+                    '磁盘使用率:<span class="disk-percent" style="color: #EF3B3A; font-weight: bold;"></span>' +
+                    '<div class="progress">' +
+                    '<div class="progress-bar" role="progressbar" aria-valuenow="40"' +
+                    'aria-valuemin="0" aria-valuemax="100">' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>';
+                e_disk.append($(h_new_disk));
+                var e_disk_this_device = $('#' + idname + ' #disk-size .disk-total'),
+                    e_disk_this_fstype = $('#' + idname + ' #disk-size .disk-fstype'),
+                    e_disk_this_mountpoint = $('#' + idname + ' #disk-size .disk-mountpoint'),
+                    e_disk_this_volume = $('#' + idname + ' #disk-size .disk-volume'),
+                    e_disk_this_used = $('#' + idname + ' #disk-size .disk-used'),
+                    e_disk_this_free = $('#' + idname + ' #disk-size .disk-free'),
+                    e_disk_this_percent_text = $('#' + idname + ' .disk-percent'),
+                    e_disk_this_percent_bar = $('#' + idname + ' .progress div');
+
+                e_disk_this_device.html(d.device);
+                e_disk_this_fstype.html(d.fstype);
+                e_disk_this_mountpoint.html(d.mountpoint);
+                e_disk_this_volume.html(Math.ceil(d.volume / 1024 / 1024 / 1024) + 'GB');
+                e_disk_this_used.html(Math.ceil(d.used / 1024 / 1024 / 1024) + 'GB');
+                e_disk_this_free.html(Math.ceil(d.free / 1024 / 1024 / 1024) + 'GB');
+                e_disk_this_percent_text.html(d.percent + '%');
+                clear_bar_class(e_disk_this_percent_bar, "progress-bar-success");
+                clear_bar_class(e_disk_this_percent_bar, "progress-bar-info");
+                clear_bar_class(e_disk_this_percent_bar, "progress-bar-warning");
+                clear_bar_class(e_disk_this_percent_bar, "progress-bar-danger");
+                add_bar_class(e_disk_this_percent_bar, d.percent);
+                e_disk_this_percent_bar.css('width', d.percent + '%');
+            }
+        });
+    }
+
+    refresh_data();
+    setInterval("refresh_data()", 1500);
+</script>
+<script src="{{ url_for('static', filename='js/f.js') }}"></script>
+</html>

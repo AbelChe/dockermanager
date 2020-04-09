@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>设备状态</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugin/datatables/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugin/notiflix/notiflix-2.0.0.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+</head>
+<body>
+<div id="wrapper">
+
+    {% include('sidebar.html') %}
+
+    <div id="page-content-wrapper">
+        <div class="container-lg">
+            <div class="row">
+                <div class="col">
+                    <h2 style=" font-size: 25px; font-weight: normal;">
+                        <span style="border-radius: 6px; font-size: 35px; font-weight: 500; margin: 0 1px;">O</span>ne-click
+                        <span style="border-radius: 6px; font-size: 35px; font-weight: 500; margin: 0 1px;">M</span>anagement
+                        <span style="border-radius: 6px; font-size: 35px; font-weight: 500; margin: 0 1px;">D</span>ocker
+                        <span style="background-color: #f7971e; border-radius: 6px; font-size: 35px; font-weight: 500;">Hub</span>
+                    </h2>
+                    <hr>
+                    <h6 class="page-nav-plane">
+                        <ul class="nav nav-pills">
+                            <li class="nav-item" role="presentation"><a class="nav-link" href="/dmr">概览</a></li>
+                            <li class="nav-item" role="presentation"><a class="nav-link"
+                                                                        href="/dmr?view=details">详细信息</a></li>
+                        </ul>
+                    </h6>
+
+                    <div class="status-overview row row-cols-1  row-cols-lg-2"></div>
+
+                    <div class="status-detail"></div>
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+</div>
+</body>
+<script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='plugin/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugin/datatables/dataTables.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('static', filename='plugin/notiflix/notiflix-2.0.0.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/f.js') }}"></script>
+{#<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>#}
+
+<script>
+    function C_overviews() {
+        D_overviews();
+        setInterval("D_overviews()", 6000000);
+    }
+
+    function C_details() {
+        D_details();
+        setInterval("D_details()", 6000000);
+    }
+
+    //
+    /////////////////////////////////////////////////////////////////////
+    //
+    function D_overviews() {
+        Notiflix.Block.Init();
+        Notiflix.Block.Circle('.status-overview', 'loading...');
+        $.get("/api/docker-status", function (data) {
+            var d_containers = data.containers,
+                d_images = data.images,
+                e_status_overview = $('.container-lg .row .status-overview');
+            e_status_overview.empty();
+            for (var i = 0; i < d_containers.length; i++) {
+                var h_new_dmr_thumbnail = '' +
+                    '                       <div class="overview-unit col">' +
+                    '                            <div class="thumbnail">' +
+                    '                                <div class="overview-one-title">' +
+                    '                                    <h3>' + d_containers[i].name + '</h3>' +
+                    '                                </div>' +
+                    '                                <div class="overview-thumbnail-one-detail">' +
+                    '                                    <div class="thumbnail-detail-left overview-text-overflow">' +
+                    '                                        Short ID:<span style="color: #0084d8; font-weight: bold;">' + d_containers[i].short_id + '</span>' +
+                    '                                        <br>' +
+                    '                                        ID:<span style="color: #0084d8; font-weight: bold;">' + d_containers[i].id + '</span>' +
+                    '                                        <br>' +
+                    '                                        镜像:<span style="color: #0084d8; font-weight: bold;">' + d_containers[i].from.image_tags.join(",") + '</span>' +
+                    '                                        <br>' +
+                    '                                        镜像 ID:<span style="color: #0084d8; font-weight: bold;">' + d_containers[i].from.image_id + '</span>' +
+                    '                                        <br>' +
+                    '                                        执行:<span style="color: #0084d8; font-weight: bold;">' + d_containers[i].command + '</span>' +
+                    '                                        <br>' +
+                    '                                        状态:<span style="color: #0084d8; font-weight: bold;">' + d_containers[i].status + '</span>' +
+                    '                                    </div>' +
+                    '                                    <div class="thumbnail-detail-right">' +
+                    '                                        <div class="thumbnail-detail-right-status">' +
+                    '                                            <i class="fa ' + (function (s) {
+                        return s == "running" ? "fa-check-circle-o text-success" : s == "paused" ? "fa fa-pause-circle-o text-warning" : "fa-stop-circle-o text-danger"
+                    })(d_containers[i].status) + '" aria-hidden="true" style="font-size: 70px;"></i>' +
+                    '                                        </div>' +
+                    '                                        <div class="thumbnail-detail-btn">' +
+                    '                                            <div class="thumbnail-detail-btn-items">' +
+                    '                                                <div class="thumbnail-detail-btn-manage">' +
+                    '                                                    <a href="/dmr/container?id=' + d_containers[i].id.substr(0,12) + '" class="btn btn-info" role="button">管理</a>' +
+                    '                                                </div>' +
+                    '                                                <div class="dropdown thumbnail-detail-btn-list">' +
+                    '                                                    <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' +
+                    '                                                        <i class="fa fa-ellipsis-h" aria-hidden="true"></i>' +
+                    '                                                    </button>' +
+                    '                                                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink">' +
+                    '                                                        <a class="dropdown-item" href="#">打开Shell</a>' +
+                    '                                                        <a class="dropdown-item" href="#">重启</a>' +
+                    '                                                        <a class="dropdown-item" href="#">关闭</a>' +
+                    '                                                    </div>' +
+                    '                                                </div>' +
+                    '                                            </div>' +
+                    '                                        </div>' +
+                    '                                    </div>' +
+                    '                                </div>' +
+                    '                            </div>' +
+                    '                        </div>';
+
+                e_status_overview.append($(h_new_dmr_thumbnail));
+            }
+        });
+        Notiflix.Block.Remove('.status-overview', 300);
+    }
+
+
+    function D_details() {
+        var e_table = $('.status-detail');
+        e_table.empty();
+        var h_new_tr = '' +
+            '                       <div class="card">' +
+            '                            <div class="card-header">' +
+            '                                Details Table' +
+            '                            </div>' +
+            '                            <div class="card-body">' +
+            '                                <div>' +
+            '                                    <table class="table table-striped table-bordered" id="dataTable" width="100%"' +
+            '                                           cellspacing="0">' +
+            '                                        <thead style="text-align: center;">' +
+            '                                        <tr>' +
+            '                                            <th rowspan="2" style="vertical-align:middle;">Name</th>' +
+            '                                            <th rowspan="2" style="vertical-align:middle;">ID</th>' +
+            '                                            <th rowspan="2" style="vertical-align:middle;">Status</th>' +
+            '                                            <th rowspan="2" style="vertical-align:middle;">Port</th>' +
+            '                                            <th rowspan="2" style="vertical-align:middle;">Command</th>' +
+            '                                            <th colspan="2" style="text-align: center;">FROM</th>' +
+            '                                        </tr>' +
+            '                                        <tr>' +
+            '                                            <th>Image Name</th>' +
+            '                                            <th>Image ID</th>' +
+            '                                        </tr>' +
+            '                                        </thead>' +
+            '                                    </table>' +
+            '                                </div>' +
+            '                            </div>' +
+            '                        </div>';
+        e_table.append($(h_new_tr));
+        Notiflix.Block.Init();
+        Notiflix.Block.Dots('table', 'Loading...');
+        $.get('/api/docker-status', function (data) {
+            var table = $('#dataTable').DataTable({
+                scrollX: true,
+            });
+            for (var i = 0; i < data.containers.length; i++) {
+                var d = data.containers[i];
+                var pk = Object.keys(d.port),
+                    pv = Object.values(d.port),
+                    dp = [];
+                if (!$.isEmptyObject(d.port)) {
+                    for (var j = 0; j < pv[0].length; j++) {
+                        dp.push(pv[0][j].HostIp + ':' + pv[0][j].HostPort + '->' + pk[0]);
+                    }
+                } else {
+                    dp.push('none');
+                }
+
+                table.row.add([
+                    d.name,
+                    d.short_id + '</br>' + d.id,
+                    d.status + '<span class="' + (function (s) {
+                        return s == 'running' ? 'font-color-success glyphicon glyphicon-ok-circle' : 'font-color-danger glyphicon glyphicon-remove-circle'
+                    })(d.status) + '" style="font-size: 15px;"></span>',
+                    dp.join(','),
+                    d.command,
+                    d.from.image_tags.join(","),
+                    d.from.image_id
+                ]).draw();
+            }
+        });
+        Notiflix.Block.Remove('table', 300);
+    }
+
+</script>
+
+<script>
+    // q  url参数
+    // p  页面
+    // e  元素
+    // h  html
+    // v  变量
+    // C  控制函数
+    // D  渲染函数
+    var qp_mapping = {
+        '': 'C_overviews()',
+        'details': 'C_details()'
+    };
+    var q_view = GetQueryValue('view'),
+        e_page_nav_plane = $('.page-nav-plane ul li'),
+        change_flag = 1;
+    for (var i = 0; i < e_page_nav_plane.length; i++) {
+        if (e_page_nav_plane.eq(i).children('a').hasClass('active')) {
+            e_page_nav_plane.eq(i).children('a').removeClass('active');
+        }
+    }
+    for (var i = 0; i < e_page_nav_plane.length; i++) {
+        var v = GetRequest(e_page_nav_plane.eq(i).children('a').attr('href'));
+        if (v.view) {
+            if (v.view == q_view) {
+                e_page_nav_plane.eq(i).children('a').addClass('active');
+                change_flag = 0;
+                break;
+            }
+        }
+    }
+    if (change_flag) {
+        e_page_nav_plane.eq(0).children('a').addClass('active');
+        setTimeout(qp_mapping[''], 100);
+    } else {
+        setTimeout(qp_mapping[q_view], 100);
+    }
+
+</script>
+
+</html>
